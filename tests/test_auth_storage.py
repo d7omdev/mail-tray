@@ -11,6 +11,14 @@ def test_storage_writes_private_nonsecret_config(tmp_path):
     assert path.stat().st_mode & 0o777 == 0o600
 
 
+def test_empty_xdg_environment_uses_home(tmp_path, monkeypatch):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.setenv('XDG_CONFIG_HOME', '')
+    monkeypatch.setenv('XDG_STATE_HOME', '')
+    assert storage.config_dir() == tmp_path / '.config/mail-tray'
+    assert storage.state_dir() == tmp_path / '.local/state/mail-tray'
+
+
 def test_missing_file_uses_default(tmp_path):
     assert storage.load(tmp_path / 'notfound', {'accounts': []}) == {'accounts': []}
 

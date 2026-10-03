@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "mail-tray"
 version = "0.1.0"
 description = "Linux tray notifications for Gmail and Zoho Mail"
 requires-python = ">=3.10"
-dependencies = ["requests>=2.31", "keyring>=25"]
+dependencies = ["requests>=2.28", "keyring>=23"]
 
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-cov>=5"]
@@ -19,4 +19,4 @@ mail-tray = "mailtray.__main__:main"
 include = ["mailtray*"]
 
 [tool.setuptools.package-data]
-mailtray = ["icons/*.png", "setup.html"]
+mailtray = ["icons/*.png", "icons/*.svg", "setup.html"]

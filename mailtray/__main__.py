@@ -4,6 +4,7 @@ import argparse
 import getpass
 import sys
 
+from .settings import load_settings, settings_path
 from .setup_service import REGIONS, connect_account
 
 
@@ -27,6 +28,7 @@ def main() -> None:
     add = sub.add_parser("setup", help="Open guided setup, or use a provider for terminal setup")
     add.add_argument("provider", nargs="?", choices=["gmail", "zoho"])
     add.add_argument("--region", default="com", choices=REGIONS, help="Zoho data center")
+    sub.add_parser("config", help="Create and show the settings.ini path")
     args = parser.parse_args()
     try:
         if args.command == "setup":
@@ -35,6 +37,9 @@ def main() -> None:
             else:
                 from .setup_web import run
                 run()
+        elif args.command == "config":
+            load_settings()
+            print(settings_path())
         else:
             from .tray import run
             run()

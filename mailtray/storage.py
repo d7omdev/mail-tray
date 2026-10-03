@@ -6,11 +6,11 @@ from pathlib import Path
 
 
 def config_dir() -> Path:
-    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "mail-tray"
+    return Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "mail-tray"
 
 
 def state_dir() -> Path:
-    return Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "mail-tray"
+    return Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state") / "mail-tray"
 
 
 def load(path: Path, default: dict) -> dict:
