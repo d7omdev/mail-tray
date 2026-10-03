@@ -3,6 +3,15 @@ from unittest.mock import patch
 from mailtray import providers
 
 
+def test_account_inbox_urls_are_provider_specific():
+    assert providers.inbox_url({'provider': 'gmail', 'email': 'a+b@example.com'}) == (
+        'https://mail.google.com/mail/u/?authuser=a%2Bb%40example.com#inbox'
+    )
+    assert providers.inbox_url({'provider': 'zoho', 'region': 'eu'}) == (
+        'https://mail.zoho.eu/zm/#mail/folder/inbox'
+    )
+
+
 def test_gmail_reads_headers_unread_label_and_thread_url():
     def fake_get(url, token, provider, **params):
         if url.endswith('/messages'):

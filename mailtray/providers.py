@@ -20,6 +20,18 @@ def get(url: str, token: str, provider: str, **params: object) -> dict:
     return data
 
 
+def inbox_url(account: dict) -> str:
+    """Open the selected account's Inbox in its web client."""
+    if account["provider"] == "gmail":
+        return f"https://mail.google.com/mail/u/?authuser={quote(account['email'], safe='')}#inbox"
+    if account["provider"] == "zoho":
+        region = account["region"]
+        if region not in ("com", "eu", "in", "com.au", "jp", "ca", "com.cn"):
+            raise ValueError("Unsupported Zoho region")
+        return f"https://mail.zoho.{region}/zm/#mail/folder/inbox"
+    raise ValueError("Unsupported mail provider")
+
+
 def gmail_mail(account: dict, token: str) -> tuple[list[Message], int]:
     base = "https://gmail.googleapis.com/gmail/v1/users/me"
     listing = get(f"{base}/messages", token, "gmail", labelIds="INBOX", maxResults=50)

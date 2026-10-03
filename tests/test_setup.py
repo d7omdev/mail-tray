@@ -42,7 +42,7 @@ def test_setup_page_shows_exact_links_and_existing_status(wizard):
     assert 'no-store' == page.headers['Cache-Control']
     assert 'frame-ancestors' in page.headers['Content-Security-Policy']
     assert requests.get(base + '/status', timeout=5).json()['accounts'] == []
-    for name in ('gmail', 'zoho'):
+    for name in ('gmail', 'zoho', 'mail-tray'):
         assert requests.get(base + f'/icons/{name}.png', timeout=5).headers['Content-Type'] == 'image/png'
 
 
@@ -77,7 +77,7 @@ def test_browser_setup_succeeds_without_exposing_credentials(wizard):
                 break
             time.sleep(.01)
         assert status['stage'] == 'connected'
-        assert status['accounts'] == [{'provider': 'gmail', 'email': 'me@example.com'}]
+        assert status['accounts'] == [{'id': 'gmail:google:me@example.com', 'provider': 'gmail', 'email': 'me@example.com'}]
         assert 'within a minute' in status['message']
         assert secret not in response.text + str(status) + requests.get(base, timeout=5).text
     assert post(base, server, '/close', {}).status_code == 200
@@ -161,7 +161,7 @@ def test_guided_setup_oauth_callback_to_final_account_status(wizard):
                 break
             time.sleep(.01)
         assert status['stage'] == 'connected'
-        assert status['accounts'] == [{'email': 'user@example.com', 'provider': 'gmail'}]
+        assert status['accounts'] == [{'id': 'gmail:google:user@example.com', 'email': 'user@example.com', 'provider': 'gmail'}]
         assert callback_page and 'Return to Mail Tray setup' in callback_page[0]
         assert 'private-access' not in str(status)
         secret_set.assert_called_once()
@@ -179,6 +179,79 @@ def test_gmail_profile_denied_is_not_mistaken_for_connected(tmp_path, monkeypatc
             setup_service.connect_account('gmail', 'id', 'secret')
     secret_set.assert_not_called()
     assert storage.accounts() == []
+
+
+def test_remove_account_clears_only_selected_credentials_and_seen_state(tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path))
+    first = {'id': 'gmail:google:first@example.com', 'email': 'first@example.com', 'provider': 'gmail'}
+    second = {'id': 'zoho:eu:second@example.com', 'email': 'second@example.com', 'provider': 'zoho',
+              'region': 'eu', 'account_id': '123'}
+    storage.save(storage.config_dir() / 'accounts.json', {'accounts': [first, second]})
+    storage.save(storage.state_dir() / 'seen.json', {first['id']: {'ids': ['a']},
+                                                   second['id']: {'ids': ['b']}})
+    with patch.object(setup_service.keyring, 'get_password', return_value='token'), \
+         patch.object(setup_service.keyring, 'delete_password') as delete:
+        result = setup_service.remove_account(first['id'])
+    assert result == {'email': first['email'], 'state_cleared': True}
+    delete.assert_called_once_with('mail-tray', first['id'])
+    assert storage.accounts() == [second]
+    assert storage.load(storage.state_dir() / 'seen.json', {}) == {second['id']: {'ids': ['b']}}
+
+
+def test_remove_account_refuses_unknown_or_locked_keyring(tmp_path, monkeypatch):
+    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path))
+    first = {'id': 'gmail:google:first@example.com', 'email': 'first@example.com', 'provider': 'gmail'}
+    storage.save(storage.config_dir() / 'accounts.json', {'accounts': [first]})
+    with pytest.raises(ValueError, match='not connected'):
+        setup_service.remove_account('gmail:google:unknown@example.com')
+    with patch.object(setup_service.keyring, 'get_password', return_value='token'), \
+         patch.object(setup_service.keyring, 'delete_password',
+                      side_effect=setup_service.keyring.errors.KeyringError('locked')):
+        with pytest.raises(RuntimeError, match='keyring'):
+            setup_service.remove_account(first['id'])
+    assert storage.accounts() == [first]
+
+
+def test_remove_account_via_loopback_requires_csrf_and_updates_status(wizard):
+    server, base = wizard
+    account = {'id': 'gmail:google:me@example.com', 'email': 'me@example.com', 'provider': 'gmail'}
+    storage.save(storage.config_dir() / 'accounts.json', {'accounts': [account]})
+    assert requests.post(base + '/remove', data={'id': account['id']}, timeout=5).status_code == 403
+    assert post(base, server, '/remove', {'id': account['id']},
+                {'Origin': 'https://bad.example'}).status_code == 403
+    with patch('mailtray.setup_web.remove_account', return_value={'email': account['email'],
+                                                                  'state_cleared': True}) as remove:
+        response = post(base, server, '/remove', {'id': account['id']})
+        assert response.status_code == 200
+        remove.assert_called_once_with(account['id'])
+    assert server.state.snapshot()['stage'] == 'removed'
+    assert 'me@example.com' in server.state.snapshot()['message']
+
+
+def test_loopback_remove_deletes_real_records_and_rejects_busy_state(wizard, monkeypatch, tmp_path):
+    server, base = wizard
+    monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path))
+    account = {'id': 'zoho:eu:me@example.com', 'email': 'me@example.com', 'provider': 'zoho',
+               'region': 'eu', 'account_id': '123'}
+    storage.save(storage.config_dir() / 'accounts.json', {'accounts': [account]})
+    storage.save(storage.state_dir() / 'seen.json', {account['id']: {'ids': ['message']}})
+    server.state.stage = 'authorizing'
+    assert post(base, server, '/remove', {'id': account['id']}).status_code == 409
+    assert storage.accounts() == [account]
+    server.state.stage = 'ready'
+    with patch.object(setup_service.keyring, 'get_password', side_effect=setup_service.keyring.errors.KeyringError('locked')):
+        blocked = post(base, server, '/remove', {'id': account['id']})
+    assert blocked.status_code == 409
+    assert 'keyring' in blocked.text
+    assert storage.accounts() == [account]
+    with patch.object(setup_service.keyring, 'get_password', return_value='token'), \
+         patch.object(setup_service.keyring, 'delete_password') as delete:
+        assert post(base, server, '/remove', {'id': account['id']}).status_code == 200
+    delete.assert_called_once_with('mail-tray', account['id'])
+    assert storage.accounts() == []
+    assert storage.load(storage.state_dir() / 'seen.json', {}) == {}
+    assert post(base, server, '/remove', {'id': account['id']}).status_code == 404
 
 
 def test_terminal_setup_remains_available(monkeypatch):

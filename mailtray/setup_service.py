@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 
+import keyring
 import requests
 
 from . import storage
-from .auth import authorize, secret_set
+from .auth import SERVICE, authorize, secret_set
 from .providers import get
 
 REGIONS = ("com", "eu", "in", "com.au", "jp", "ca", "com.cn")
@@ -53,3 +54,29 @@ def connect_account(provider: str, client_id: str, client_secret: str, region: s
         "accounts": [a for a in existing if a["id"] != identifier] + [account]
     })
     return account
+
+
+def remove_account(identifier: str) -> dict:
+    """Forget one connected mailbox without affecting any other account."""
+    accounts = storage.accounts()
+    account = next((item for item in accounts if item["id"] == identifier), None)
+    if account is None:
+        raise ValueError("This account is not connected. Refresh setup and try again.")
+    try:
+        if keyring.get_password(SERVICE, identifier) is not None:
+            keyring.delete_password(SERVICE, identifier)
+    except keyring.errors.KeyringError as exc:
+        raise RuntimeError("Could not remove credentials from the desktop keyring. "
+                           "Unlock the keyring and retry.") from exc
+    storage.save(storage.config_dir() / "accounts.json", {
+        "accounts": [item for item in accounts if item["id"] != identifier]
+    })
+    path = storage.state_dir() / "seen.json"
+    state = storage.load(path, {})
+    cleared = True
+    if identifier in state:
+        try:
+            storage.save(path, {key: value for key, value in state.items() if key != identifier})
+        except OSError:
+            cleared = False  # Account is removed; don't claim history was cleared.
+    return {"email": account["email"], "state_cleared": cleared}

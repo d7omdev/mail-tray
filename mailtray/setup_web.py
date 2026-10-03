@@ -10,7 +10,7 @@ from importlib.resources import files
 from urllib.parse import parse_qs, urlsplit
 
 from . import storage
-from .setup_service import REGIONS, connect_account
+from .setup_service import REGIONS, connect_account, remove_account
 
 
 class SetupState:
@@ -30,7 +30,7 @@ class SetupState:
             return {
                 "stage": self.stage, "message": self.message, "provider": self.provider,
                 "mailboxes": [a["primaryEmailAddress"] for a in self.mailboxes],
-                "accounts": [{"provider": a["provider"], "email": a["email"]}
+                "accounts": [{"id": a["id"], "provider": a["provider"], "email": a["email"]}
                              for a in storage.accounts()],
             }
 
@@ -68,6 +68,18 @@ class SetupState:
             self.message = "Saving your selected mailbox securely…"
             self.choice.set()
             return True
+
+    def remove(self, identifier: str) -> dict:
+        with self.lock:
+            if self.stage in ("authorizing", "choosing"):
+                raise RuntimeError("Finish the current sign-in before removing an account.")
+            result = remove_account(identifier)
+            self.stage = "removed"
+            self.message = (f"{result['email']} was removed from Mail Tray."
+                            if result["state_cleared"] else
+                            f"{result['email']} was disconnected, but old seen IDs could not be cleared. "
+                            "Check your state directory permissions.")
+            return result
 
     def _connect(self, provider: str, client_id: str, client_secret: str, region: str) -> None:
         try:
@@ -132,7 +144,7 @@ def make_server() -> ThreadingHTTPServer:
                 self._send(200, page.encode(), "text/html; charset=utf-8")
             elif path == "/status":
                 self._send(200, json.dumps(state.snapshot()).encode(), "application/json")
-            elif path in ("/icons/gmail.png", "/icons/zoho.png"):
+            elif path in ("/icons/gmail.png", "/icons/zoho.png", "/icons/mail-tray.png"):
                 icon = files("mailtray").joinpath("icons", path.rsplit("/", 1)[-1])
                 self._send(200, icon.read_bytes(), "image/png")
             else:
@@ -169,6 +181,21 @@ def make_server() -> ThreadingHTTPServer:
                     self._send(200, b"Mailbox selected", "text/plain")
                 else:
                     self._send(400, b"Choose a mailbox from the list", "text/plain")
+            elif path == "/remove":
+                identifier = fields.get("id", [""])[0]
+                if not identifier or len(identifier) > 512:
+                    self._send(400, b"Choose a connected account", "text/plain")
+                    return
+                try:
+                    state.remove(identifier)
+                except ValueError:
+                    self._send(404, b"Account not found. Refresh setup and retry.", "text/plain")
+                except RuntimeError as exc:
+                    self._send(409, str(exc).encode(), "text/plain; charset=utf-8")
+                except Exception:
+                    self._send(500, b"Could not remove account. Check keyring and file permissions.", "text/plain")
+                else:
+                    self._send(200, b"Account removed", "text/plain")
             elif path == "/close":
                 if state.snapshot()["stage"] in ("authorizing", "choosing"):
                     self._send(409, b"Finish the current sign-in before closing setup", "text/plain")

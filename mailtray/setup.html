@@ -6,45 +6,371 @@
 <meta name="color-scheme" content="light">
 <title>Set up · Mail Tray</title>
 <style nonce="__NONCE__">
-:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f3f6f8;color:#182a33;line-height:1.5}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button,a{cursor:pointer}a{color:#146281;text-underline-offset:3px}a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #1b779d;outline-offset:2px}header{background:#173a48;color:#f8fbfc;padding:24px max(24px,calc((100vw - 1050px)/2));display:flex;justify-content:space-between;align-items:center;gap:20px}header strong{font-size:1.25rem;letter-spacing:-.025em}header span{font-size:.85rem;color:#c3dae3}main{max-width:1050px;margin:0 auto;padding:42px 24px 80px}h1{font-size:clamp(2rem,4vw,3.2rem);letter-spacing:-.035em;line-height:1.12;max-width:18ch;margin:0 0 12px}h2{font-size:1.22rem;margin:0 0 14px;letter-spacing:-.02em}p{margin:0 0 18px}small,.muted{color:#4d626c}section{margin-top:35px}.intro{max-width:65ch;color:#3d555f}.status{border:1px solid #b7cdd4;background:#e7f1f3;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;margin-top:30px;border-radius:12px}.status[data-stage=error]{background:#fff0e9;border-color:#e5b69e}.status[data-stage=connected]{background:#e7f3eb;border-color:#a7ceb3}.signal{width:12px;height:12px;border-radius:50%;background:#2583a3;flex:none;margin-top:6px}.status[data-stage=error] .signal{background:#bc5a36}.status[data-stage=connected] .signal{background:#33764c}.status strong{display:block}.status p{margin:3px 0 0;overflow-wrap:anywhere}.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(270px,.85fr);gap:28px;align-items:start}.panel{background:#fff;border:1px solid #d1dfe3;border-radius:14px;padding:28px}.side{background:#eaf1f4;border-color:#d1dfe3}.provider-tabs{display:flex;gap:8px;margin:24px 0}.provider-tabs button{display:flex;align-items:center;gap:10px;border:1px solid #c5d5da;background:#fff;padding:10px 16px;border-radius:9px;font-weight:650}.provider-tabs button[aria-pressed=true]{border-color:#136184;box-shadow:inset 0 0 0 1px #136184;background:#ebf5f8}.provider-tabs img{width:24px;height:24px;object-fit:contain}ol{padding-left:22px;margin:0}li{padding:0 0 16px 6px}li:last-child{padding-bottom:0}li strong{display:block}li p{margin:3px 0 8px}li a{display:inline-block;font-weight:600}label{display:block;font-weight:650;margin-top:18px}input,select{width:100%;border:1px solid #aebfc7;border-radius:8px;background:#fff;padding:10px 12px;margin-top:6px;color:inherit}input::placeholder{color:#61757e}.hint{font-size:.88rem;margin:6px 0 0;color:#4d626c}.primary{background:#175f7b;border:1px solid #175f7b;color:white;padding:12px 20px;border-radius:9px;font-weight:700;margin-top:22px}.primary:hover{background:#104c63}.primary:disabled{opacity:.55;cursor:wait}.secondary{border:1px solid #9bb4bd;background:transparent;border-radius:8px;padding:8px 12px;color:inherit}.secondary:hover{background:#e0eaee}.form-error{color:#9b371a;min-height:1.5em;margin:8px 0 0}.accounts{list-style:none;padding:0;margin:10px 0 0}.accounts li{padding:10px 0;border-bottom:1px solid #ccdbdf;display:flex;align-items:center;gap:10px;overflow-wrap:anywhere}.accounts img{width:25px;height:25px;object-fit:contain}.accounts li:last-child{border-bottom:none}.muted{font-size:.9rem}.mailbox{border:1px solid #aac5cc;padding:16px;margin-top:20px;border-radius:10px;background:#f3f8f9}.mailbox[hidden],.provider-guide[hidden],.region-field[hidden]{display:none}footer{max-width:1050px;margin:auto;padding:0 24px 35px;color:#52666e;font-size:.87rem}footer a{margin-left:8px}@media(max-width:760px){header{padding:20px 24px}main{padding:28px 18px 55px}.grid{grid-template-columns:1fr}.panel{padding:22px}.side{order:-1}.provider-tabs{flex-wrap:wrap}footer{padding:0 18px 30px}}
-@media(min-width:761px){header{padding-top:16px;padding-bottom:16px}main{padding-top:26px}h1{max-width:none;font-size:2.55rem}.status{margin-top:18px;padding:12px 18px}main>section{margin-top:20px}main>section h2{margin-bottom:5px}.accounts li{padding:5px 0}.provider-tabs{margin:18px 0}.intro{margin-bottom:12px}}
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #20333c; background: #f6f8f7; line-height: 1.5;
+  --ink: #20333c; --muted: #52656e; --accent: #145d70;
+  --line: #d9e3e3; --focus: #18758d;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+[hidden] { display: none !important; }
+::selection { background: #c3e4e5; color: var(--ink); }
+.topbar { background: #183b47; color: white; }
+.topbar-inner { max-width: 1120px; margin: auto; padding: 15px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
+.brand img { width: 34px; height: 34px; }
+.topbar-note { color: #d5e5e9; font-size: 13px; }
+main { max-width: 1120px; margin: auto; padding: 42px 28px 72px; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.13; letter-spacing: -.035em; margin-bottom: 11px; }
+h2 { font-size: 20px; line-height: 1.25; letter-spacing: -.02em; }
+h3 { font-size: 16px; letter-spacing: -.01em; }
+p { margin-bottom: 0; }
+.lead { color: var(--muted); max-width: 68ch; font-size: 15px; }
+.overview { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 32px; align-items: start; }
+.status { display: flex; align-items: start; gap: 11px; padding: 13px 15px; background: #e9f2f2; border: 1px solid #d2e2e2; border-radius: 12px; overflow-wrap: anywhere; }
+.status[data-stage="error"] { background: #fff1eb; border-color: #efcec0; }
+.status[data-stage="connected"], .status[data-stage="removed"] { background: #eaf4ee; border-color: #cce3d4; }
+.status-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #267b90; margin-top: 6px; }
+.status[data-stage="error"] .status-dot { background: #b75034; }
+.status[data-stage="connected"] .status-dot, .status[data-stage="removed"] .status-dot { background: #2b7958; }
+.status[data-stage="authorizing"] .status-dot { animation: breathe 1.5s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .status-dot { animation: none !important; } }
+.status strong { display: block; font-size: 14px; }
+.status p { font-size: 13px; color: #45606b; margin-top: 2px; }
+.accounts-section { margin-top: 34px; padding: 20px 0 17px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.section-heading { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; margin-bottom: 14px; }
+.section-heading h2 { margin: 0; }
+.section-heading p { font-size: 13px; color: var(--muted); }
+.accounts { list-style: none; padding: 0; margin: 0; }
+.accounts li { display: flex; align-items: center; gap: 12px; padding: 10px 0; min-width: 0; }
+.accounts li + li { border-top: 1px solid var(--line); }
+.accounts img { width: 30px; height: 30px; object-fit: contain; flex: none; }
+.account-identity { min-width: 0; flex: 1; }
+.account-identity strong { display: block; overflow-wrap: anywhere; font-size: 14px; }
+.account-identity small { display: block; color: #40745a; font-size: 12px; }
+.remove-button { border: 1px solid transparent; background: none; color: #984c39; border-radius: 8px; padding: 8px 10px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.remove-button:hover { background: #fcebe5; }
+.workspace { margin-top: 36px; display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(300px, .96fr); gap: 48px; align-items: start; }
+.connect-panel { background: white; border: 1px solid var(--line); border-radius: 14px; padding: 30px; }
+.connect-panel h2 { margin-bottom: 6px; }
+.supporting { color: var(--muted); font-size: 14px; }
+.provider-tabs { display: flex; gap: 8px; margin: 25px 0 22px; }
+.provider-tabs button { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 9px; font-weight: 650; transition: background-color .16s, border-color .16s; }
+.provider-tabs button:hover { background: #f1f7f6; }
+.provider-tabs button[aria-pressed="true"] { background: #e9f4f3; border-color: #69a8ae; box-shadow: inset 0 0 0 1px #69a8ae; }
+.provider-tabs img { width: 23px; height: 23px; object-fit: contain; }
+.connect-panel h3 { margin-bottom: 3px; }
+.field { margin-top: 17px; }
+.field label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; }
+.field label span { color: var(--muted); font-weight: 400; }
+.field input, .field select, .redirect-input { width: 100%; border: 1px solid #bdced0; border-radius: 8px; background: white; padding: 10px 12px; min-height: 44px; color: var(--ink); }
+.field input::placeholder { color: #687982; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 7px; }
+.guide-link { display: inline-block; margin-top: 7px; font-size: 13px; }
+.primary { background: #185d70; color: white; border: 1px solid #185d70; border-radius: 8px; min-height: 44px; padding: 9px 16px; font-weight: 650; }
+.primary:hover { background: #104d60; }
+.primary:disabled { opacity: .55; cursor: wait; }
+.connect-panel .primary { width: 100%; margin-top: 21px; }
+.form-error, .dialog-error { color: #a33d25; font-size: 13px; min-height: 20px; margin-top: 8px; }
+.mailbox { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 16px; }
+.mailbox label { display: block; font-weight: 650; font-size: 13px; }
+.mailbox select { width: 100%; margin-top: 7px; padding: 10px; border: 1px solid #bdced0; border-radius: 8px; }
+.guide { padding: 8px 0; }
+.guide h2 { margin-bottom: 4px; }
+.guide ol { list-style: none; counter-reset: step; padding: 0; margin: 21px 0 0; }
+.guide li { counter-increment: step; display: grid; grid-template-columns: 24px 1fr; column-gap: 12px; padding: 0 0 21px; }
+.guide li::before { content: counter(step); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e5edef; font-weight: 700; font-size: 12px; color: #35616c; }
+.guide li + li { border-top: 1px solid var(--line); padding-top: 18px; }
+.guide li + li::before { margin-top: 0; }
+.guide li strong { font-size: 14px; }
+.guide li p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.guide li a { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 650; }
+.guide li a:hover { text-decoration-thickness: 2px; }
+.redirect-input { margin-top: 10px; font-size: 12px; }
+.secondary { border: 1px solid #9db6bd; background: white; color: var(--accent); border-radius: 8px; min-height: 40px; padding: 8px 14px; font-weight: 650; }
+.secondary:hover { background: #f0f5f4; }
+.guide .secondary { margin-top: 8px; font-size: 12px; }
+footer { border-top: 1px solid var(--line); max-width: 1120px; margin: 0 auto; padding: 22px 28px 40px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+footer a { color: var(--muted); }
+footer .secondary { background: transparent; font-size: 12px; }
+dialog { width: min(420px, calc(100vw - 36px)); border: 1px solid var(--line); border-radius: 14px; padding: 25px; color: var(--ink); background: white; box-shadow: 0 18px 52px rgba(0,0,0,.18); }
+dialog::backdrop { background: rgba(14,34,42,.54); }
+dialog h2 { margin-bottom: 9px; }
+dialog p { font-size: 14px; color: var(--muted); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 25px; }
+.danger { min-height: 40px; padding: 8px 14px; color: white; background: #a8422f; border: 1px solid #a8422f; border-radius: 8px; font-weight: 650; }
+.danger:hover { background: #8c3324; }
+.danger:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 850px) {
+  main { padding: 30px 20px 54px; }
+  .overview { grid-template-columns: 1fr; gap: 17px; }
+  .workspace { grid-template-columns: 1fr; gap: 25px; margin-top: 26px; }
+  .guide { padding: 0; }
+  .topbar-inner { padding: 13px 20px; }
+  footer { padding: 20px 20px 35px; }
+}
+@media (max-width: 480px) {
+  .topbar-note { display: none; }
+  .connect-panel { padding: 22px 18px; }
+  .provider-tabs button { gap: 6px; padding: 6px 4px; white-space: nowrap; font-size: 14px; }
+  .accounts-section { margin-top: 24px; }
+  .section-heading { display: block; }
+  .section-heading p { margin-top: 4px; }
+  .accounts li { gap: 9px; }
+  .remove-button { padding: 8px 5px; }
+  footer { align-items: start; flex-direction: column; }
+}
 </style>
 </head>
 <body>
-<header><strong>Mail Tray</strong><span>Private setup · on this computer</span></header>
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><img src="/icons/mail-tray.png" alt="">Mail Tray</div>
+  <span class="topbar-note">Private setup on this computer</span>
+</div></header>
 <main>
-<h1>Connect your inbox to your tray.</h1>
-<p class="intro">Create a read-only OAuth client with your mail provider, then authorize it here. Your mail password is never entered in Mail Tray. Client credentials and tokens are kept in your desktop keyring.</p>
-<div id="status" class="status" data-stage="ready" role="status" aria-live="polite"><span class="signal"></span><div><strong id="status-title">Ready to connect</strong><p id="status-message">Choose a provider to get started.</p></div></div>
-<section aria-labelledby="accounts-heading"><h2 id="accounts-heading">Connected accounts</h2><ul class="accounts" id="accounts"><li class="muted">No accounts yet.</li></ul></section>
-<div class="provider-tabs" role="group" aria-label="Mail provider"><button type="button" data-provider="gmail" aria-pressed="true"><img src="/icons/gmail.png" alt="">Gmail</button><button type="button" data-provider="zoho" aria-pressed="false"><img src="/icons/zoho.png" alt="">Zoho Mail</button></div>
-<div class="grid">
-<section class="panel" aria-labelledby="connect-heading"><h2 id="connect-heading">Connect Gmail</h2><p class="muted">Complete the provider steps, then enter your own OAuth client details.</p>
-<form id="connect" autocomplete="off"><input type="hidden" name="provider" id="provider" value="gmail">
-<div class="region-field" id="region-field" hidden><label for="region">Zoho data center</label><select id="region" name="region"><option value="com">United States (.com)</option><option value="eu">Europe (.eu)</option><option value="in">India (.in)</option><option value="com.au">Australia (.com.au)</option><option value="jp">Japan (.jp)</option><option value="ca">Canada (.ca)</option><option value="com.cn">China (.com.cn)</option></select><p class="hint">Choose the region where your Zoho mailbox lives.</p></div>
-<label for="client-id">OAuth client ID</label><input id="client-id" name="client_id" required maxlength="512" spellcheck="false" autocapitalize="off" placeholder="Paste the client ID">
-<label for="client-secret">OAuth client secret <span id="secret-optional" class="muted">(optional for Gmail desktop clients)</span></label><input id="client-secret" name="client_secret" type="password" maxlength="512" spellcheck="false" autocomplete="off" placeholder="Paste the client secret">
-<p class="hint">Never paste your mail password. These details are sent only to the setup process on this computer.</p>
-<button class="primary" id="connect-button" type="submit">Sign in with Gmail</button><p id="form-error" class="form-error" role="alert"></p>
-</form>
-<div id="mailbox" class="mailbox" hidden><label for="mailboxes">Choose a Zoho mailbox</label><select id="mailboxes"></select><button id="choose-button" class="primary" type="button">Use this mailbox</button></div>
-</section>
-<aside class="panel side" aria-labelledby="guide-heading"><h2 id="guide-heading">Where to configure it</h2>
-<ol class="provider-guide" id="gmail-guide"><li><strong>Create or select a Google Cloud project</strong><p>Use a separate project named Mail Tray if you have another app. In every linked console page, confirm the project selector shows that project. Its consent-screen name appears at sign-in.</p><a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">Open Google project creation ↗</a></li><li><strong>Enable Gmail API</strong><a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener noreferrer">Open Gmail API page ↗</a></li><li><strong>Add your Google account as a test user</strong><p>Under Audience, select External / Testing and add the exact address you'll sign in with. A Workspace admin may also need to permit API access.</p><a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener noreferrer">Open OAuth Audience ↗</a></li><li><strong>Create a Desktop app OAuth client</strong><p>Copy its client ID and secret. Choose <b>Desktop app</b>, not Web application. The app requests only Gmail read-only access.</p><a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">Open OAuth Clients ↗</a></li></ol>
-<ol class="provider-guide" id="zoho-guide" hidden><li><strong>Open Zoho API Console</strong><p>Sign in to the Zoho account whose mailbox you want.</p><a href="https://api-console.zoho.com/" target="_blank" rel="noopener noreferrer">Open Zoho API Console ↗</a></li><li><strong>Create a Server-based Application</strong><p>Register this exact authorized redirect URI:</p><input id="redirect" value="http://127.0.0.1:8765/callback" readonly aria-label="Zoho redirect URI"><button id="copy-redirect" class="secondary" type="button">Copy redirect URI</button></li><li><strong>Copy client ID and secret</strong><p>Zoho requires both. Choose the matching data center in the form. Mail Tray asks only for read-only account, folder, and message scopes.</p></li></ol>
-</aside>
-</div>
-</main><footer>Setup runs only at 127.0.0.1. <button id="close" class="secondary" type="button">Close setup</button> The tray app runs separately. <a href="https://developers.google.com/workspace/gmail/api/auth/scopes" target="_blank" rel="noopener noreferrer">Gmail permissions ↗</a></footer>
+  <div class="overview">
+    <div>
+      <h1>Your inbox, in the tray.</h1>
+      <p class="lead">Connect Gmail or Zoho with read-only access. Your mail password stays with your provider; OAuth credentials are kept in your desktop keyring.</p>
+    </div>
+    <div id="status" class="status" data-stage="ready" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      <div><strong id="status-title">Ready to connect</strong><p id="status-message">Choose a provider to get started.</p></div>
+    </div>
+  </div>
+
+  <section id="accounts-section" class="accounts-section" aria-labelledby="accounts-heading" hidden>
+    <div class="section-heading"><h2 id="accounts-heading">Connected accounts</h2><p>Manage the inboxes this app checks.</p></div>
+    <ul class="accounts" id="accounts"></ul>
+  </section>
+
+  <div class="workspace">
+    <section class="connect-panel" aria-labelledby="connect-heading">
+      <h2 id="connect-heading">Add an account</h2>
+      <p class="supporting">Choose your provider, then sign in with your own OAuth client.</p>
+      <div class="provider-tabs" role="group" aria-label="Mail provider">
+        <button type="button" data-provider="gmail" aria-pressed="true"><img src="/icons/gmail.png" alt="">Gmail</button>
+        <button type="button" data-provider="zoho" aria-pressed="false"><img src="/icons/zoho.png" alt="">Zoho Mail</button>
+      </div>
+      <h3 id="provider-heading">Connect Gmail</h3>
+      <p class="supporting">Need a client ID? Follow the guide <a href="#guide">on this page</a> first.</p>
+      <form id="connect" autocomplete="off">
+        <input type="hidden" name="provider" id="provider" value="gmail">
+        <div class="field" id="region-field" hidden>
+          <label for="region">Zoho data center</label>
+          <select id="region" name="region">
+            <option value="com">United States (.com)</option><option value="eu">Europe (.eu)</option>
+            <option value="in">India (.in)</option><option value="com.au">Australia (.com.au)</option>
+            <option value="jp">Japan (.jp)</option><option value="ca">Canada (.ca)</option>
+            <option value="com.cn">China (.com.cn)</option>
+          </select><p class="hint">Choose the region of your Zoho mailbox.</p>
+        </div>
+        <div class="field"><label for="client-id">OAuth client ID</label>
+          <input id="client-id" name="client_id" required maxlength="512" spellcheck="false" autocapitalize="off" placeholder="Paste the client ID"></div>
+        <div class="field"><label for="client-secret">OAuth client secret <span id="secret-optional">(optional for Gmail desktop clients)</span></label>
+          <input id="client-secret" name="client_secret" type="password" maxlength="512" spellcheck="false" autocomplete="off" placeholder="Paste the client secret"></div>
+        <p class="hint">Never enter your mail password here. This form is served only on your computer.</p>
+        <button class="primary" id="connect-button" type="submit">Sign in with Gmail</button>
+        <p id="form-error" class="form-error" role="alert"></p>
+      </form>
+      <div id="mailbox" class="mailbox" hidden>
+        <label for="mailboxes">Choose a Zoho mailbox</label>
+        <select id="mailboxes"></select>
+        <button id="choose-button" class="primary" type="button">Connect this mailbox</button>
+      </div>
+    </section>
+
+    <aside id="guide" class="guide" aria-labelledby="guide-heading">
+      <h2 id="guide-heading">Set up your OAuth client</h2>
+      <p class="supporting">Open each destination in your provider's console, then return here to sign in.</p>
+      <ol id="gmail-guide">
+        <li><div><strong>Create a Google Cloud project</strong><p>Keep Mail Tray separate from your other apps. Check the project selector on every linked page.</p><a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">Open project creation ↗</a></div></li>
+        <li><div><strong>Enable Gmail API</strong><p>This must be enabled in the same project as your OAuth client.</p><a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener noreferrer">Open Gmail API page ↗</a></div></li>
+        <li><div><strong>Add yourself as a test user</strong><p>If your app is in Testing mode, add the exact Google account you'll sign in with.</p><a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener noreferrer">Open OAuth Audience ↗</a></div></li>
+        <li><div><strong>Create a Desktop OAuth client</strong><p>Choose <b>Desktop app</b>, then copy its client ID and secret into the form.</p><a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">Open OAuth Clients ↗</a></div></li>
+      </ol>
+      <ol id="zoho-guide" hidden>
+        <li><div><strong>Open Zoho API Console</strong><p>Sign in to the Zoho account whose mailbox you want to connect.</p><a href="https://api-console.zoho.com/" target="_blank" rel="noopener noreferrer">Open Zoho API Console ↗</a></div></li>
+        <li><div><strong>Create a Server-based Application</strong><p>Use this exact authorized redirect URI:</p><input class="redirect-input" id="redirect" value="http://127.0.0.1:8765/callback" readonly aria-label="Zoho redirect URI"><button id="copy-redirect" class="secondary" type="button">Copy redirect URI</button></div></li>
+        <li><div><strong>Copy client ID and secret</strong><p>Select the matching data center in the form. Mail Tray asks only for read-only scopes.</p></div></li>
+      </ol>
+    </aside>
+  </div>
+</main>
+<footer><span>Only this computer can access the setup page at 127.0.0.1.</span><button id="close" class="secondary" type="button">Close setup</button></footer>
+
+<dialog id="remove-dialog" aria-labelledby="remove-heading" aria-describedby="remove-description">
+  <h2 id="remove-heading">Remove this account?</h2>
+  <p id="remove-description"></p>
+  <p class="supporting">Mail Tray will forget its saved OAuth credentials and stop checking this inbox. Your messages at the provider are not deleted.</p>
+  <p id="remove-error" class="dialog-error" role="alert"></p>
+  <div class="dialog-actions"><button id="cancel-remove" class="secondary" type="button">Cancel</button><button id="confirm-remove" class="danger" type="button">Remove account</button></div>
+</dialog>
 <script nonce="__NONCE__">
-const csrf='__CSRF__';const $=id=>document.getElementById(id);let provider='gmail';
-function chooseProvider(name){provider=name;$('provider').value=name;$('connect-heading').textContent='Connect '+(name==='gmail'?'Gmail':'Zoho Mail');$('gmail-guide').hidden=name!=='gmail';$('zoho-guide').hidden=name!=='zoho';$('region-field').hidden=name!=='zoho';$('secret-optional').hidden=name!=='gmail';$('client-secret').required=name==='zoho';$('connect-button').textContent='Sign in with '+(name==='gmail'?'Gmail':'Zoho');$('form-error').textContent='';document.querySelectorAll('[data-provider]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.provider===name)))}
-document.querySelectorAll('[data-provider]').forEach(b=>b.addEventListener('click',()=>chooseProvider(b.dataset.provider)));
-$('copy-redirect').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('redirect').value);$('copy-redirect').textContent='Copied';}catch{ $('redirect').select();$('copy-redirect').textContent='Select and copy the URI';}});
-async function post(path,fields){const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-Setup-Token':csrf},body:new URLSearchParams(fields)});if(!response.ok)throw Error(await response.text());return response}
-$('connect').addEventListener('submit',async event=>{event.preventDefault();$('form-error').textContent='';$('connect-button').disabled=true;try{await post('/connect',new FormData(event.currentTarget));$('client-secret').value='';await refresh()}catch(error){$('form-error').textContent=error.message;$('connect-button').disabled=false}});
-$('choose-button').addEventListener('click',async()=>{try{await post('/select',{index:$('mailboxes').value});await refresh()}catch(error){$('form-error').textContent=error.message}});
-$('close').addEventListener('click',async()=>{try{await post('/close',{});$('status-title').textContent='Setup closed';$('status-message').textContent='You can close this browser tab.';clearInterval(refreshTimer);$('close').disabled=true}catch(error){$('form-error').textContent=error.message}});
-async function refresh(){try{const response=await fetch('/status',{cache:'no-store'});if(!response.ok)throw Error('Setup is unavailable');const data=await response.json();$('status').dataset.stage=data.stage;const titles={ready:'Ready to connect',authorizing:'Waiting for sign-in',choosing:'Choose a mailbox',connected:'Account connected',error:'Could not connect'};$('status-title').textContent=titles[data.stage]||'Setup';$('status-message').textContent=data.message;$('connect-button').disabled=['authorizing','choosing'].includes(data.stage);$('accounts').replaceChildren();if(!data.accounts.length){const li=document.createElement('li');li.className='muted';li.textContent='No accounts yet.';$('accounts').append(li)}for(const a of data.accounts){const li=document.createElement('li'),img=document.createElement('img'),span=document.createElement('span');img.src='/icons/'+a.provider+'.png';img.alt='';span.textContent=a.email+' · '+(a.provider==='gmail'?'Gmail':'Zoho Mail');li.append(img,span);$('accounts').append(li)}$('mailbox').hidden=data.stage!=='choosing';if(data.stage==='choosing'){const select=$('mailboxes');if(select.options.length!==data.mailboxes.length){select.replaceChildren();data.mailboxes.forEach((email,index)=>{const option=document.createElement('option');option.value=String(index);option.textContent=email;select.append(option)})}}else $('mailboxes').replaceChildren()}catch{$('status').dataset.stage='error';$('status-title').textContent='Setup page disconnected';$('status-message').textContent='Check that the setup command is still running, then reload.'}}
-refresh();const refreshTimer=setInterval(refresh,1400);
+const csrf = '__CSRF__';
+const $ = id => document.getElementById(id);
+let provider = 'gmail';
+let lastAccounts = '';
+let pendingRemoval = null;
+let refreshTimer;
+
+function chooseProvider(name) {
+  provider = name;
+  $('provider').value = name;
+  $('provider-heading').textContent = name === 'gmail' ? 'Connect Gmail' : 'Connect Zoho Mail';
+  $('gmail-guide').hidden = name !== 'gmail';
+  $('zoho-guide').hidden = name !== 'zoho';
+  $('region-field').hidden = name !== 'zoho';
+  $('secret-optional').hidden = name !== 'gmail';
+  $('client-secret').required = name === 'zoho';
+  $('connect-button').textContent = name === 'gmail' ? 'Sign in with Gmail' : 'Sign in with Zoho';
+  $('form-error').textContent = '';
+  document.querySelectorAll('[data-provider]').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.provider === name));
+  });
+}
+document.querySelectorAll('[data-provider]').forEach(button => {
+  button.addEventListener('click', () => chooseProvider(button.dataset.provider));
+});
+$('copy-redirect').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText($('redirect').value);
+    $('copy-redirect').textContent = 'Copied';
+  } catch {
+    $('redirect').select();
+    $('copy-redirect').textContent = 'Select and copy the URI';
+  }
+});
+async function post(path, fields) {
+  const response = await fetch(path, {
+    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Setup-Token': csrf},
+    body: new URLSearchParams(fields)
+  });
+  if (!response.ok) throw Error(await response.text());
+  return response;
+}
+$('connect').addEventListener('submit', async event => {
+  event.preventDefault();
+  $('form-error').textContent = '';
+  $('connect-button').disabled = true;
+  try {
+    await post('/connect', new FormData(event.currentTarget));
+    $('client-secret').value = '';
+    await refresh();
+  } catch (error) {
+    $('form-error').textContent = error.message;
+    $('connect-button').disabled = false;
+  }
+});
+$('choose-button').addEventListener('click', async () => {
+  try { await post('/select', {index: $('mailboxes').value}); await refresh(); }
+  catch (error) { $('form-error').textContent = error.message; }
+});
+$('close').addEventListener('click', async () => {
+  try {
+    await post('/close', {});
+    $('status-title').textContent = 'Setup closed';
+    $('status-message').textContent = 'You can close this browser tab.';
+    clearInterval(refreshTimer);
+    $('close').disabled = true;
+  } catch (error) { $('form-error').textContent = error.message; }
+});
+
+function renderAccounts(accounts) {
+  const fingerprint = JSON.stringify(accounts);
+  if (fingerprint === lastAccounts) return;
+  lastAccounts = fingerprint;
+  $('accounts-section').hidden = accounts.length === 0;
+  $('accounts').replaceChildren();
+  for (const account of accounts) {
+    const row = document.createElement('li');
+    const icon = document.createElement('img');
+    icon.src = '/icons/' + account.provider + '.png';
+    icon.alt = '';
+    const identity = document.createElement('div');
+    identity.className = 'account-identity';
+    const address = document.createElement('strong');
+    address.textContent = account.email;
+    const detail = document.createElement('small');
+    detail.textContent = (account.provider === 'gmail' ? 'Gmail' : 'Zoho Mail') + ' · Connected';
+    identity.append(address, detail);
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'remove-button';
+    remove.textContent = 'Remove';
+    remove.setAttribute('aria-label', 'Remove ' + account.email);
+    remove.addEventListener('click', () => {
+      pendingRemoval = account.id;
+      $('remove-description').textContent = account.email;
+      $('remove-error').textContent = '';
+      $('remove-dialog').showModal();
+      $('cancel-remove').focus();
+    });
+    row.append(icon, identity, remove);
+    $('accounts').append(row);
+  }
+}
+$('cancel-remove').addEventListener('click', () => $('remove-dialog').close());
+$('remove-dialog').addEventListener('close', () => { pendingRemoval = null; });
+$('confirm-remove').addEventListener('click', async () => {
+  if (!pendingRemoval) return;
+  $('remove-error').textContent = '';
+  $('confirm-remove').disabled = true;
+  try {
+    await post('/remove', {id: pendingRemoval});
+    $('remove-dialog').close();
+    await refresh();
+  } catch (error) {
+    $('remove-error').textContent = error.message;
+  } finally { $('confirm-remove').disabled = false; }
+});
+
+async function refresh() {
+  try {
+    const response = await fetch('/status', {cache: 'no-store'});
+    if (!response.ok) throw Error('Setup is unavailable');
+    const data = await response.json();
+    const titles = {ready: 'Ready to connect', authorizing: 'Waiting for sign-in',
+      choosing: 'Choose a mailbox', connected: 'Account connected',
+      removed: 'Account removed', error: 'Could not connect'};
+    $('status').dataset.stage = data.stage;
+    const title = titles[data.stage] || 'Setup';
+    if ($('status-title').textContent !== title) $('status-title').textContent = title;
+    if ($('status-message').textContent !== data.message) $('status-message').textContent = data.message;
+    $('connect-button').disabled = ['authorizing', 'choosing'].includes(data.stage);
+    renderAccounts(data.accounts);
+    $('mailbox').hidden = data.stage !== 'choosing';
+    if (data.stage === 'choosing') {
+      const choices = data.mailboxes.join('\u0000');
+      if ($('mailboxes').dataset.choices !== choices) {
+        $('mailboxes').dataset.choices = choices;
+        $('mailboxes').replaceChildren();
+        data.mailboxes.forEach((email, index) => {
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = email;
+          $('mailboxes').append(option);
+        });
+      }
+    } else {
+      $('mailboxes').dataset.choices = '';
+      $('mailboxes').replaceChildren();
+    }
+  } catch {
+    $('status').dataset.stage = 'error';
+    $('status-title').textContent = 'Setup page disconnected';
+    $('status-message').textContent = 'Check that the setup command is still running, then reload.';
+  }
+}
+refresh();
+refreshTimer = setInterval(refresh, 1400);
 </script>
-</body></html>
+</body>
+</html>
